@@ -13,9 +13,11 @@ import (
 const LOAD_MODULES = true
 
 var startTimeStamp = time.Now().Unix()
+var ownerId int64 = 0
 
 func main() {
 	dotenv.Load()
+	ownerId, _ = strconv.ParseInt(os.Getenv("OWNER_ID"), 10, 64)
 
 	appId, _ := strconv.Atoi(os.Getenv("APP_ID"))
 	client, err := tg.NewClient(tg.ClientConfig{
@@ -37,6 +39,6 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(fmt.Sprintf("Bot started as  @%s", me.Username))
+	fmt.Println(fmt.Sprintf("Bot started as @%s", me.Username))
 	client.Idle()
 }

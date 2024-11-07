@@ -14,10 +14,6 @@ import (
 )
 
 func ShellHandle(m *telegram.NewMessage) error {
-	if m.SenderID() != int64(OWNER_ID) { //&& m.SenderID() != 1960469142 {
-		m.Reply("You are not allowed to use this command")
-		return nil
-	}
 	cmd := m.Args()
 	var cmd_args []string
 	if cmd == "" {
@@ -120,6 +116,7 @@ func main() {
 	}
 
 	message = &messageX[0]
+	m = message
 
 	fmt.Println("output-start")
 	evalCode()
@@ -159,7 +156,6 @@ func packMessage(c *telegram.Client, message telegram.Message, sender *telegram.
 	}*/
 	return m
 }
-
 `
 
 func EvalHandle(m *telegram.NewMessage) error {
@@ -211,7 +207,7 @@ func perfomEval(code string, m *telegram.NewMessage) string {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		errx := fmt.Sprintf("Error: %s\nOutput: %s", err, string(out))
+		errx := fmt.Sprintf("Error: %s\nOutput: <code>%s</code>", err, strings.Split(string(out), "tmp\\eval.go:")[1])
 		return strings.TrimSpace(errx)
 	}
 	outN := strings.Split(string(out), "output-start")
