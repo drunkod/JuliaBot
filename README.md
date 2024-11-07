@@ -2,6 +2,8 @@
 
 ### ENV
 
+- Create a `.env` file in the root directory of the project
+
 - `BOT_TOKEN` : Telegram Bot Token (@BotFather)
 - `APP_ID` : Telegram API ID (my.telegram.org)
 - `API_HASH` : Telegram API HASH (my.telegram.org)
