@@ -201,6 +201,7 @@ func perfomEval(code string, m *telegram.NewMessage) string {
 	if err != nil {
 		panic(err)
 	}
+	defer os.Remove(tmp_dir + "/eval.go")
 	cmd := exec.Command("go", "run", "tmp/eval.go")
 
 	fmt.Println("Running eval.go: ")
