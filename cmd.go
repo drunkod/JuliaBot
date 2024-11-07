@@ -18,11 +18,16 @@ func initFunc(c *telegram.Client) {
 		c.AddMessageHandler("/ul", modules.UploadHandle)
 
 		c.AddMessageHandler("/start", modules.StartHandle)
+		c.AddMessageHandler("/help", modules.HelpHandle)
 		c.AddMessageHandler("/system", modules.GatherSystemInfo)
 		c.AddMessageHandler("/info", modules.UserHandle)
 		c.AddMessageHandler("/json", modules.JsonHandle)
 		c.AddMessageHandler("/ping", modules.PingHandle)
 		c.AddMessageHandler("?eval", modules.EvalHandle)
+
+		c.On("message:/file", modules.SendFileByIDHandle)
+		c.On("message:/fid", modules.GetFileIDHandle)
+		c.On("message:/dl", modules.DownloadHandle)
 	}
 }
 

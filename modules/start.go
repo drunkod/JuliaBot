@@ -16,19 +16,8 @@ import (
 var startTime = time.Now()
 
 func StartHandle(m *telegram.NewMessage) error {
-	m.Reply("Hellow!")
-	_, err := m.Client.MessagesSendReaction(&telegram.MessagesSendReactionParams{
-		Peer:  m.Peer,
-		Big:   true,
-		MsgID: m.ID,
-		Reaction: []telegram.Reaction{
-			&telegram.ReactionEmoji{
-				Emoticon: "❤️",
-			},
-		},
-	})
-
-	return err
+	m.Reply("Hellow! :)")
+	return m.React("❤️")
 }
 
 func GatherSystemInfo(m *telegram.NewMessage) error {
@@ -198,5 +187,37 @@ func PingHandle(m *telegram.NewMessage) error {
 	t := time.Now()
 	x, _ := m.Reply("Pong!")
 	x.Edit(fmt.Sprintf("Pong! <code>%s</code>", time.Since(t).String()))
+	return nil
+}
+
+var modules = []string{"Dev", "Files", "Songs", "Start"}
+
+func HelpHandle(m *telegram.NewMessage) error {
+	var b = telegram.Button{}
+
+	if !m.IsPrivate() {
+		m.Reply("DM me for help!",
+			telegram.SendOptions{
+				ReplyMarkup: b.Keyboard(b.Row(b.URL("Click Here", "t.me/"+m.Client.Me().Username+"?start=help"))),
+			})
+		return nil
+	}
+
+	var rows []*telegram.KeyboardButtonRow
+	var row []telegram.KeyboardButton
+	for i, v := range modules {
+		if i%2 == 0 && i != 0 {
+			rows = append(rows, b.Row(row...))
+			row = nil
+		}
+		row = append(row, b.Data(v+" 🫣", strings.ToLower(v)))
+	}
+	rows = append(rows, b.Row(row...))
+
+	m.Reply("Hello! I'm <b>Julia</b> created by <b>@amarnathcjd</b>. To demonstrate the capabilities of <b><a href='github.com/amarnathcjd/gogram'>gogram</a></b> library. Here are the available commands:\n\n",
+		telegram.SendOptions{
+			ReplyMarkup: b.Keyboard(rows...),
+		})
+
 	return nil
 }
