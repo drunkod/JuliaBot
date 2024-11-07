@@ -31,6 +31,12 @@ func main() {
 	client.LoginBot(os.Getenv("BOT_TOKEN"))
 
 	initFunc(client)
-	fmt.Println(client.GetMe())
+	me, err := client.GetMe()
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(fmt.Sprintf("Bot started as  @%s", me.Username))
 	client.Idle()
 }
