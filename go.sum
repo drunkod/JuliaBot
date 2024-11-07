@@ -1,0 +1,8 @@
+github.com/amarnathcjd/gogram v0.0.0-20241105152105-3a5a902decdb h1:/nEUG/zEzd+AEagq59QARX7l1o/fkzjf9FOxKJ6Dxf0=
+github.com/amarnathcjd/gogram v0.0.0-20241105152105-3a5a902decdb/go.mod h1:MPzWyqnIwVK/tji8O5pmumdoPoGHqemsIJyr7xedoE8=
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+golang.org/x/net v0.30.0 h1:AcW1SDZMkb8IpzCdQUaIq2sP4sZ4zw+55h6ynffypl4=
+golang.org/x/net v0.30.0/go.mod h1:2wGyMJ5iFasEhkwi13ChkO/t1ECNC4X4eBKkVFyYFlU=
