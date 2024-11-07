@@ -21,7 +21,7 @@ func YtSongDL(m *telegram.NewMessage) error {
 	cmd_to_get_id := exec.Command("yt-dlp", "ytsearch:"+args, "--get-id")
 	output, err := cmd_to_get_id.Output()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	videoID := strings.TrimSpace(string(output))
@@ -30,7 +30,7 @@ func YtSongDL(m *telegram.NewMessage) error {
 	cmd := exec.Command("yt-dlp", "https://www.youtube.com/watch?v="+videoID, "--embed-metadata", "--embed-thumbnail", "-f", "bestaudio", "-x", "--audio-format", "mp3", "-o", "%(id)s.mp3")
 	err = cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 
