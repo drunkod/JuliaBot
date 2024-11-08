@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 
 	"github.com/amarnathcjd/gogram/telegram"
@@ -27,7 +28,14 @@ func PinterestInlineHandle(i *telegram.InlineQuery) error {
 		return nil
 	}
 
-	images, err := fetchPinterestImages(i.Query, 10)
+	fmt.Println("Offset: ", i.Offset)
+
+	offset := 0
+	if i.Offset != "" {
+		offset, _ = strconv.Atoi(i.Offset)
+	}
+
+	images, err := fetchPinterestImages(i.Query, 5, offset)
 	if err != nil {
 		return err
 	}
@@ -53,7 +61,6 @@ func PinterestInlineHandle(i *telegram.InlineQuery) error {
 					URL: image,
 				})
 				if err != nil {
-					fmt.Println(err)
 					return
 				}
 
@@ -78,14 +85,15 @@ func PinterestInlineHandle(i *telegram.InlineQuery) error {
 		}
 
 		i.Answer(b.Results(), telegram.InlineSendOptions{
-			Gallery: true,
+			Gallery:    true,
+			NextOffset: strconv.Itoa(offset + 1),
 		})
 	}
 
 	return nil
 }
 
-func fetchPinterestImages(query string, lim int) ([]string, error) {
+func fetchPinterestImages(query string, lim int, offset int) ([]string, error) {
 	headers := map[string]string{
 		"Accept":                  "application/json, text/javascript, */*; q=0.01",
 		"Accept-Language":         "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,ml;q=0.6,bn;q=0.5",
@@ -151,9 +159,14 @@ func fetchPinterestImages(query string, lim int) ([]string, error) {
 		imageUrls = append(imageUrls, result.Images.Orig.URL)
 	}
 
-	// Limit the number of images to the limit
-	if len(imageUrls) > lim {
+	if len(imageUrls) > lim && offset == 0 {
 		imageUrls = imageUrls[:lim]
+	} else if len(imageUrls) > lim && offset > 0 {
+		offset = offset * lim
+		if offset > len(imageUrls) {
+			offset = len(imageUrls) - lim
+		}
+		imageUrls = imageUrls[offset : offset+lim]
 	}
 
 	return imageUrls, nil
