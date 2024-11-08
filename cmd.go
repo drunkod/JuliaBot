@@ -33,5 +33,7 @@ func initFunc(c *telegram.Client) {
 		c.On("message:/file", modules.SendFileByIDHandle)
 		c.On("message:/fid", modules.GetFileIDHandle)
 		c.On("message:/dl", modules.DownloadHandle, telegram.FilterFunc(FilterOwner))
+
+		c.On("inline:pin", modules.PinterestInlineHandle)
 	}
 }
