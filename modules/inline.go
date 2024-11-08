@@ -48,25 +48,8 @@ func PinterestInlineHandle(i *telegram.InlineQuery) error {
 
 		i.Answer(b.Results())
 	} else {
-		var photos []telegram.Photo
-		for _, image := range images { // upload images concurrently
-
-			uploaded, err := i.Client.MessagesUploadMedia("", &telegram.InputPeerSelf{}, &telegram.InputMediaPhotoExternal{
-				URL: image,
-			})
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			switch uploaded.(type) {
-			case *telegram.MessageMediaPhoto:
-				photos = append(photos, uploaded.(*telegram.MessageMediaPhoto).Photo)
-			}
-		}
-
-		for im := range photos {
-			b.Photo(photos[im], &telegram.ArticleOptions{
+		for im := range images {
+			b.Photo(images[im], &telegram.ArticleOptions{
 				ID:    fmt.Sprintf("%d", im),
 				Title: fmt.Sprintf("pinterest-image-%d", im+1),
 				ReplyMarkup: button.Keyboard(
