@@ -3,11 +3,10 @@ package modules
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
-	"sync"
 
 	"github.com/amarnathcjd/gogram/telegram"
 )
@@ -27,8 +26,6 @@ func PinterestInlineHandle(i *telegram.InlineQuery) error {
 		i.Answer(b.Results())
 		return nil
 	}
-
-	fmt.Println("Offset: ", i.Offset)
 
 	offset := 0
 	if i.Offset != "" {
@@ -52,25 +49,21 @@ func PinterestInlineHandle(i *telegram.InlineQuery) error {
 		i.Answer(b.Results())
 	} else {
 		var photos []telegram.Photo
-		wg := sync.WaitGroup{}
-		wg.Add(len(images))
-		for _, image := range images {
-			go func(image string) {
-				defer wg.Done()
-				uploaded, err := i.Client.MessagesUploadMedia("", &telegram.InputPeerSelf{}, &telegram.InputMediaPhotoExternal{
-					URL: image,
-				})
-				if err != nil {
-					return
-				}
+		for _, image := range images { // upload images concurrently
 
-				switch uploaded.(type) {
-				case *telegram.MessageMediaPhoto:
-					photos = append(photos, uploaded.(*telegram.MessageMediaPhoto).Photo)
-				}
-			}(image)
+			uploaded, err := i.Client.MessagesUploadMedia("", &telegram.InputPeerSelf{}, &telegram.InputMediaPhotoExternal{
+				URL: image,
+			})
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			switch uploaded.(type) {
+			case *telegram.MessageMediaPhoto:
+				photos = append(photos, uploaded.(*telegram.MessageMediaPhoto).Photo)
+			}
 		}
-		wg.Wait()
 
 		for im := range photos {
 			b.Photo(photos[im], &telegram.ArticleOptions{
@@ -129,7 +122,7 @@ func fetchPinterestImages(query string, lim int, offset int) ([]string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
