@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -105,7 +104,7 @@ func UserHandle(m *telegram.NewMessage) error {
 	un := user.Users[0].(*telegram.UserObj)
 
 	var userString string
-	userString += "<b>---- User Info ----</b>\n\n"
+	userString += "<b>User Info:</b>\n"
 	if un.FirstName != "" {
 		userString += "<b>First Name:</b> " + un.FirstName + "\n"
 	}
@@ -125,7 +124,10 @@ func UserHandle(m *telegram.NewMessage) error {
 			return s
 		}() + "</b>]\n"
 	}
-	userString += "<b>User Link:</b> <a href=\"tg://user?id=" + strconv.FormatInt(un.ID, 10) + "\">userLink</a>\n\n---- User ID ----\n\n<b>ID:</b> " + strconv.FormatInt(un.ID, 10) + "\n"
+	userString += "<b>User Link:</b> <a href=\"tg://user?id=" + strconv.FormatInt(un.ID, 10) + "\">userLink</a>\n<b>ID:</b> <code>" + strconv.FormatInt(un.ID, 10) + "</code>\n"
+	if uf.Birthday != nil {
+		userString += "<b>Birthday:</b> " + parseBirthday(uf.Birthday.Day, uf.Birthday.Month, uf.Birthday.Year)
+	}
 
 	if uf.ProfilePhoto != nil {
 		p := uf.ProfilePhoto.(*telegram.PhotoObj)
@@ -142,7 +144,7 @@ func UserHandle(m *telegram.NewMessage) error {
 		}
 		_, err := m.ReplyMedia(inp, telegram.MediaOptions{Caption: userString})
 		if err != nil {
-			m.Reply("Error: " + err.Error())
+			m.Reply(userString)
 		}
 	} else {
 		m.Reply(userString)
@@ -150,74 +152,18 @@ func UserHandle(m *telegram.NewMessage) error {
 	return nil
 }
 
-func JsonHandle(m *telegram.NewMessage) error {
-	if !m.IsReply() {
-		if strings.Contains(m.Args(), "-s") {
-			b, _ := json.MarshalIndent(m.Sender, "", "  ")
-			m.Reply(`<pre lang="json">` + string(b) + `</pre>`)
-		} else if strings.Contains(m.Args(), "-m") {
-			b, _ := json.MarshalIndent(m.Media(), "", "  ")
-			m.Reply(`<pre lang="json">` + string(b) + `</pre>`)
-		} else if strings.Contains(m.Args(), "-c") {
-			b, _ := json.MarshalIndent(m.Channel, "", "  ")
-			m.Reply(`<pre lang="json">` + string(b) + `</pre>`)
-		} else {
-			m.Reply(`<pre lang="json">` + m.Marshal() + `</pre>`)
-		}
-	} else {
-		r, _ := m.GetReplyMessage()
-		if strings.Contains(m.Args(), "-s") {
-			b, _ := json.MarshalIndent(r.Sender, "", "  ")
-			m.Reply(`<pre lang="json">` + string(b) + `</pre>`)
-		} else if strings.Contains(m.Args(), "-m") {
-			b, _ := json.MarshalIndent(r.Media(), "", "  ")
-			m.Reply(`<pre lang="json">` + string(b) + `</pre>`)
-		} else if strings.Contains(m.Args(), "-c") {
-			b, _ := json.MarshalIndent(r.Channel, "", "  ")
-			m.Reply(`<pre lang="json">` + string(b) + `</pre>`)
-		} else {
-			m.Reply(`<pre lang="json">` + r.Marshal() + `</pre>`)
-		}
-	}
-
-	return nil
-}
-
 func PingHandle(m *telegram.NewMessage) error {
-	t := time.Now()
-	x, _ := m.Reply("Pong!")
-	x.Edit(fmt.Sprintf("Pong! <code>%s</code>", time.Since(t).String()))
-	return nil
+	startTime := time.Now()
+	sentMessage, _ := m.Reply("Pinging...")
+	_, err := sentMessage.Edit(fmt.Sprintf("<code>Pong!</code> <code>%s</code>", time.Since(startTime).String()))
+	return err
 }
 
-var modules = []string{"Dev", "Files", "Songs", "Start"}
+func init() {
+	Mods.AddModule("Start", `<b>Here are the commands available in Start module:</b>
 
-func HelpHandle(m *telegram.NewMessage) error {
-	var b = telegram.Button{}
-
-	if !m.IsPrivate() {
-		m.Reply("DM me for help!",
-			telegram.SendOptions{
-				ReplyMarkup: b.Keyboard(b.Row(b.URL("Click Here", "t.me/"+m.Client.Me().Username+"?start=help"))),
-			})
-		return nil
-	}
-
-	var rows []*telegram.KeyboardButtonRow
-	var row []telegram.KeyboardButton
-	for i, v := range modules {
-		if i%2 == 0 && i != 0 {
-			rows = append(rows, b.Row(row...))
-			row = nil
-		}
-		row = append(row, b.Data(v+" 🫣", strings.ToLower(v)))
-	}
-	rows = append(rows, b.Row(row...))
-
-	m.Reply("Hello! I'm <b>Julia</b> created by <b>@amarnathcjd</b>. To demonstrate the capabilities of <b><a href='github.com/amarnathcjd/gogram'>gogram</a></b> library. Here are the available commands:\n\n",
-		telegram.SendOptions{
-			ReplyMarkup: b.Keyboard(rows...),
-		})
-
-	return nil
+<code>/start</code> - check if the bot is alive
+<code>/ping</code> - check the bot's response time
+<code>/systeminfo</code> - get system information
+<code>/info [user_id]</code> - get user information`)
 }

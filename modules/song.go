@@ -40,3 +40,10 @@ func YtSongDL(m *telegram.NewMessage) error {
 
 	return nil
 }
+
+func init() {
+	Mods.AddModule("Song", `<b>Here are the commands available in Song module:</b>
+The Song module is used to download songs from YouTube.
+
+Its currently Broken!`)
+}

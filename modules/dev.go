@@ -2,11 +2,12 @@ package modules
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -64,6 +65,7 @@ var msg_id int32 = %d
 
 var client *telegram.Client
 var message *telegram.NewMessage
+var m *telegram.NewMessage
 ` + "var msg = `%s`\nvar snd = `%s`\nvar cht = `%s`\nvar chn = `%s`" + `
 
 
@@ -188,24 +190,19 @@ func perfomEval(code string, m *telegram.NewMessage) string {
 		}
 	}
 
-	// copy session-cache.journal file to tmp
-	_, err = os.Stat("session-cache.journal")
-	if err == nil {
-		err = os.Rename("session-cache.journal", tmp_dir+"/session-cache.journal")
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	err = ioutil.WriteFile(tmp_dir+"/eval.go", []byte(code_file), 0644)
-	if err != nil {
-		panic(err)
-	}
 	defer os.Remove(tmp_dir + "/eval.go")
+	defer os.Remove(tmp_dir + "/cache.db")
+	defer os.Remove(tmp_dir)
+
+	// copy cache.db file to tmp
+	_, err = os.Stat("cache.db")
+	if err == nil {
+		f, _ := os.ReadFile("cache.db")
+		_ = os.WriteFile(tmp_dir+"/cache.db", f, 0644)
+	}
+
+	os.WriteFile(tmp_dir+"/eval.go", []byte(code_file), 0644)
 	cmd := exec.Command("go", "run", "tmp/eval.go")
-
-	fmt.Println("Running eval.go: ")
-
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		errx := fmt.Sprintf("Error: %s\nOutput: <code>%s</code>", err, strings.Split(string(out), "tmp\\eval.go:")[1])
@@ -218,4 +215,78 @@ func perfomEval(code string, m *telegram.NewMessage) string {
 	}
 
 	return "No Output."
+}
+
+func JsonHandle(m *telegram.NewMessage) error {
+	var jsonString []byte
+	if !m.IsReply() {
+		if strings.Contains(m.Args(), "-s") {
+			jsonString, _ = json.MarshalIndent(m.Sender, "", "  ")
+		} else if strings.Contains(m.Args(), "-m") {
+			jsonString, _ = json.MarshalIndent(m.Media(), "", "  ")
+		} else if strings.Contains(m.Args(), "-c") {
+			jsonString, _ = json.MarshalIndent(m.Channel, "", "  ")
+		} else {
+			jsonString, _ = json.MarshalIndent(m.OriginalUpdate, "", "  ")
+		}
+	} else {
+		r, err := m.GetReplyMessage()
+		if err != nil {
+			m.Reply("<code>Error:</code> <b>" + err.Error() + "</b>")
+			return nil
+		}
+		if strings.Contains(m.Args(), "-s") {
+			jsonString, _ = json.MarshalIndent(r.Sender, "", "  ")
+		} else if strings.Contains(m.Args(), "-m") {
+			jsonString, _ = json.MarshalIndent(r.Media(), "", "  ")
+		} else if strings.Contains(m.Args(), "-c") {
+			jsonString, _ = json.MarshalIndent(r.Channel, "", "  ")
+		} else {
+			jsonString, _ = json.MarshalIndent(r.OriginalUpdate, "", "  ")
+		}
+	}
+
+	// find all "Data": "<base64>" and decode and replace with actual data
+	dataFieldRegex := regexp.MustCompile(`"Data": "([a-zA-Z0-9+/]+={0,2})"`)
+	dataFields := dataFieldRegex.FindAllStringSubmatch(string(jsonString), -1)
+	for _, v := range dataFields {
+		decoded, err := base64.StdEncoding.DecodeString(v[1])
+		if err != nil {
+			m.Reply("Error: " + err.Error())
+			return nil
+		}
+		jsonString = []byte(strings.ReplaceAll(string(jsonString), v[0], `"Data": "`+string(decoded)+`"`))
+	}
+
+	if len(jsonString) > 4095 {
+		defer os.Remove("message.json")
+		tmpFile, err := os.Create("message.json")
+		if err != nil {
+			m.Reply("Error: " + err.Error())
+			return nil
+		}
+
+		_, err = tmpFile.Write(jsonString)
+		if err != nil {
+			m.Reply("Error: " + err.Error())
+			return nil
+		}
+
+		_, err = m.ReplyMedia(tmpFile.Name(), telegram.MediaOptions{Caption: "Message JSON"})
+		if err != nil {
+			m.Reply("Error: " + err.Error())
+		}
+	} else {
+		m.Reply("<pre lang='json'>" + string(jsonString) + "</pre>")
+	}
+
+	return nil
+}
+
+func init() {
+	Mods.AddModule("Dev", `<b>Here are the commands available in Dev module:</b>
+
+- <code>/sh &lt;command&gt;</code> - Execute shell commands
+- <code>/eval &lt;code&gt;</code> - Evaluate Go code
+- <code>/json [-s | -m | -c] &lt;message&gt;</code> - Get JSON of a message`)
 }

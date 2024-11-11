@@ -39,6 +39,6 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(fmt.Sprintf("Bot started as @%s", me.Username))
+	client.Logger.Info(fmt.Sprintf("Bot started as @%s, in %s.", me.Username, time.Since(time.Unix(startTimeStamp, 0)).String()))
 	client.Idle()
 }

@@ -147,3 +147,9 @@ func fetchPinterestImages(query string, lim int, offset int) ([]string, error) {
 
 	return imageUrls, nil
 }
+
+func init() {
+	Mods.AddModule("Inline", `<b>Here are the commands available in Inline module:</b>
+
+- <code>@botusername pin &lt;query&gt;</code> - Search for images on Pinterest`)
+}

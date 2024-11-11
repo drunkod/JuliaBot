@@ -118,3 +118,12 @@ func DownloadHandle(m *telegram.NewMessage) error {
 
 	return nil
 }
+
+func init() {
+	Mods.AddModule("Files", `<b>Here are the commands available in Files module:</b>
+
+<code>/file &lt;fileId&gt;</code> - Send a file by its fileId
+<code>/fid</code> - Reply to a file to get its fileId
+<code>/ul &lt;filename&gt; [-s]</code> - Upload a file
+<code>/dl</code> - Reply to a file to download it`)
+}
