@@ -5,3 +5,5 @@
 /tmp/
 *.ipa
 *.mp4
+/gomod2nix-template
+/vendor
